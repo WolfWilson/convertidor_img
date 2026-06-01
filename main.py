@@ -216,6 +216,12 @@ class ImageConverter(QMainWindow):
             names = [os.path.basename(f) for f in files]
             self.lbl_selected.setText("  |  ".join(names))
 
+            # Default output folder = source folder (overrideable by the user)
+            if not self.output_folder:
+                source_dir = os.path.dirname(files[0])
+                self.output_folder = source_dir
+                self.lbl_destination.setText(source_dir)
+
     def select_folder(self):
         """Open a dialog to pick the output folder."""
         folder = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta de destino")
