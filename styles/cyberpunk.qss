@@ -57,6 +57,13 @@ QLabel#lblQuality {
     letter-spacing: 1px;
 }
 
+QLabel#lblDimension {
+    color: #6677aa;
+    font-size: 12px;
+    font-family: "Segoe UI", monospace;
+    letter-spacing: 1px;
+}
+
 /* ── QToolButton (icon buttons) ──────────────────────── */
 QToolButton {
     background-color: #0d0d1f;
@@ -153,6 +160,47 @@ QSpinBox::down-arrow {
     border-top: 5px solid #00f5ff;
     width: 0;
     height: 0;
+}
+
+QSpinBox:disabled {
+    color: #2a2a4a;
+    border: 2px solid #1a1a3a;
+    background-color: #080814;
+}
+
+/* ── QCheckBox ───────────────────────────────────────── */
+QCheckBox {
+    color: #6677aa;
+    font-family: "Segoe UI", monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    spacing: 8px;
+}
+
+QCheckBox:checked {
+    color: #00f5ff;
+}
+
+QCheckBox::indicator {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #2a2a4a;
+    border-radius: 3px;
+    background-color: #0d0d1f;
+}
+
+QCheckBox::indicator:hover {
+    border: 2px solid #00f5ff;
+}
+
+QCheckBox::indicator:checked {
+    background-color: #00f5ff;
+    border: 2px solid #00f5ff;
+}
+
+QCheckBox::indicator:checked:hover {
+    background-color: #ff00cc;
+    border: 2px solid #ff00cc;
 }
 
 /* ── QMessageBox ─────────────────────────────────────── */

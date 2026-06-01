@@ -3,7 +3,8 @@ import os
 import qtawesome as qta
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QToolButton, QFileDialog, QSpinBox, QMessageBox, QFrame
+    QLabel, QToolButton, QFileDialog, QSpinBox, QMessageBox, QFrame,
+    QCheckBox
 )
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, QSize
@@ -49,8 +50,8 @@ class ImageConverter(QMainWindow):
 
     def _setup_window(self):
         self.setWindowTitle("Convertir imágenes a WebP")
-        self.setMinimumSize(560, 360)
-        self.setGeometry(400, 200, 580, 380)
+        self.setMinimumSize(560, 420)
+        self.setGeometry(400, 200, 600, 460)
 
     # ── UI construction ──────────────────────────────────────────────────────
 
@@ -70,6 +71,7 @@ class ImageConverter(QMainWindow):
         root.addWidget(self._make_label_destination())
         root.addWidget(self._make_separator())
         root.addLayout(self._make_quality_row())
+        root.addLayout(self._make_resize_row())
         root.addSpacing(6)
         root.addWidget(self._make_convert_button(), alignment=Qt.AlignCenter)
 
@@ -142,6 +144,47 @@ class ImageConverter(QMainWindow):
         row.addStretch()
         return row
 
+    def _make_resize_row(self) -> QHBoxLayout:
+        """Checkbox + width/height inputs for optional resizing."""
+        row = QHBoxLayout()
+        row.setSpacing(10)
+
+        self.chk_resize = QCheckBox("REDIMENSIONAR")
+        self.chk_resize.setObjectName("chkResize")
+        self.chk_resize.setChecked(False)
+        self.chk_resize.toggled.connect(self._on_resize_toggled)
+
+        lbl_w = QLabel("ANCHO:")
+        lbl_w.setObjectName("lblDimension")
+
+        self.spin_width = QSpinBox()
+        self.spin_width.setObjectName("spinDimension")
+        self.spin_width.setRange(1, 9999)
+        self.spin_width.setValue(800)
+        self.spin_width.setSuffix(" px")
+        self.spin_width.setEnabled(False)
+
+        lbl_h = QLabel("ALTO:")
+        lbl_h.setObjectName("lblDimension")
+
+        self.spin_height = QSpinBox()
+        self.spin_height.setObjectName("spinDimension")
+        self.spin_height.setRange(1, 9999)
+        self.spin_height.setValue(600)
+        self.spin_height.setSuffix(" px")
+        self.spin_height.setEnabled(False)
+
+        row.addStretch()
+        row.addWidget(self.chk_resize)
+        row.addSpacing(16)
+        row.addWidget(lbl_w)
+        row.addWidget(self.spin_width)
+        row.addSpacing(8)
+        row.addWidget(lbl_h)
+        row.addWidget(self.spin_height)
+        row.addStretch()
+        return row
+
     def _make_convert_button(self) -> QToolButton:
         btn = QToolButton()
         btn.setObjectName("btnConvert")
@@ -152,6 +195,11 @@ class ImageConverter(QMainWindow):
         btn.setToolTip("Convertir imágenes a WebP")
         btn.clicked.connect(self.convert_images)
         return btn
+
+    def _on_resize_toggled(self, checked: bool):
+        """Enable or disable dimension inputs based on checkbox state."""
+        self.spin_width.setEnabled(checked)
+        self.spin_height.setEnabled(checked)
 
     # ── Slots / business logic ───────────────────────────────────────────────
 
@@ -186,13 +234,19 @@ class ImageConverter(QMainWindow):
             return
 
         quality = self.spin_quality.value()
+        do_resize = self.chk_resize.isChecked()
+        target_w = self.spin_width.value()
+        target_h = self.spin_height.value()
         errors: list[str] = []
 
         for path in self.image_paths:
             try:
                 name_no_ext = os.path.splitext(os.path.basename(path))[0]
                 out_path = os.path.join(self.output_folder, f"{name_no_ext}.webp")
-                Image.open(path).convert("RGB").save(out_path, "webp", quality=quality)
+                img = Image.open(path).convert("RGB")
+                if do_resize:
+                    img = img.resize((target_w, target_h), Image.LANCZOS)
+                img.save(out_path, "webp", quality=quality)
             except Exception as exc:
                 errors.append(f"{os.path.basename(path)}: {exc}")
 
