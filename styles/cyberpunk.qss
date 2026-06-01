@@ -1,0 +1,189 @@
+/* ============================================================
+   CYBERPUNK THEME — convertidor_img
+   Palette:
+     background-deep : #05050f
+     background-panel : #0d0d1f
+     background-card  : #12122a
+     accent-cyan      : #00f5ff
+     accent-magenta   : #ff00cc
+     accent-purple    : #9900ff
+     text-primary     : #e0e0ff
+     text-muted       : #6677aa
+   ============================================================ */
+
+/* ── Root window ─────────────────────────────────────── */
+QMainWindow {
+    background-color: #05050f;
+}
+
+QWidget#centralWidget {
+    background-color: #05050f;
+}
+
+/* ── Generic labels ──────────────────────────────────── */
+QLabel {
+    color: #e0e0ff;
+    font-family: "Segoe UI", "Consolas", monospace;
+    font-size: 13px;
+}
+
+QLabel#titleLabel {
+    color: #00f5ff;
+    font-size: 20px;
+    font-weight: bold;
+    font-family: "Segoe UI", monospace;
+    letter-spacing: 2px;
+    padding: 8px 0px;
+    /* Simulate glow via a subtle border at bottom */
+    border-bottom: 1px solid #00f5ff;
+    margin-bottom: 4px;
+}
+
+QLabel#lblSelected,
+QLabel#lblDestination {
+    color: #6677aa;
+    font-size: 11px;
+    font-family: "Consolas", monospace;
+    padding: 4px 8px;
+    background-color: #0d0d1f;
+    border: 1px solid #1a1a3a;
+    border-radius: 4px;
+}
+
+QLabel#lblQuality {
+    color: #00f5ff;
+    font-size: 13px;
+    font-family: "Segoe UI", monospace;
+    letter-spacing: 1px;
+}
+
+/* ── QToolButton (icon buttons) ──────────────────────── */
+QToolButton {
+    background-color: #0d0d1f;
+    border: 2px solid #00f5ff;
+    border-radius: 8px;
+    padding: 10px;
+    color: #00f5ff;
+    font-family: "Segoe UI", monospace;
+    min-width: 56px;
+    min-height: 56px;
+}
+
+QToolButton:hover {
+    background-color: #001a2a;
+    border: 2px solid #ff00cc;
+    color: #ff00cc;
+}
+
+QToolButton:pressed {
+    background-color: #1a003a;
+    border: 2px solid #9900ff;
+}
+
+QToolButton#btnConvert {
+    background-color: #0a001f;
+    border: 2px solid #ff00cc;
+    border-radius: 10px;
+    min-width: 140px;
+    min-height: 44px;
+    color: #ff00cc;
+    font-size: 13px;
+    font-weight: bold;
+    font-family: "Segoe UI", monospace;
+    letter-spacing: 2px;
+    padding: 8px 20px;
+}
+
+QToolButton#btnConvert:hover {
+    background-color: #1a0030;
+    border: 2px solid #00f5ff;
+    color: #00f5ff;
+}
+
+QToolButton#btnConvert:pressed {
+    background-color: #2a0050;
+    border: 2px solid #9900ff;
+    color: #9900ff;
+}
+
+/* ── QSpinBox ────────────────────────────────────────── */
+QSpinBox {
+    background-color: #0d0d1f;
+    color: #00f5ff;
+    border: 2px solid #00f5ff;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: "Consolas", monospace;
+    font-size: 14px;
+    min-width: 70px;
+    min-height: 30px;
+    selection-background-color: #00f5ff;
+    selection-color: #05050f;
+}
+
+QSpinBox:focus {
+    border: 2px solid #ff00cc;
+}
+
+QSpinBox::up-button,
+QSpinBox::down-button {
+    background-color: #1a1a3a;
+    border: none;
+    width: 18px;
+}
+
+QSpinBox::up-button:hover,
+QSpinBox::down-button:hover {
+    background-color: #00f5ff;
+}
+
+QSpinBox::up-arrow {
+    image: none;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-bottom: 5px solid #00f5ff;
+    width: 0;
+    height: 0;
+}
+
+QSpinBox::down-arrow {
+    image: none;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #00f5ff;
+    width: 0;
+    height: 0;
+}
+
+/* ── QMessageBox ─────────────────────────────────────── */
+QMessageBox {
+    background-color: #0d0d1f;
+    color: #e0e0ff;
+}
+
+QMessageBox QLabel {
+    color: #e0e0ff;
+    font-family: "Segoe UI", monospace;
+}
+
+QMessageBox QPushButton {
+    background-color: #0d0d1f;
+    color: #00f5ff;
+    border: 1px solid #00f5ff;
+    border-radius: 4px;
+    padding: 4px 16px;
+    min-width: 70px;
+}
+
+QMessageBox QPushButton:hover {
+    background-color: #001a2a;
+    border-color: #ff00cc;
+    color: #ff00cc;
+}
+
+/* ── Separator line widget ───────────────────────────── */
+QFrame#separator {
+    background-color: #1a1a3a;
+    max-height: 1px;
+    border: none;
+}

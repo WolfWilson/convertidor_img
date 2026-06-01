@@ -2,130 +2,156 @@ import sys
 import os
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-    QLabel, QToolButton, QFileDialog, QSpinBox, QMessageBox
-    
+    QLabel, QToolButton, QFileDialog, QSpinBox, QMessageBox, QFrame
 )
-
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, QSize
 from PIL import Image
 
 
+# ---------------------------------------------------------------------------
+#   Helpers
+# ---------------------------------------------------------------------------
+
+def load_stylesheet(path: str) -> str:
+    """Load a QSS file relative to this script's directory."""
+    base = os.path.dirname(os.path.abspath(__file__))
+    full_path = os.path.join(base, path)
+    try:
+        with open(full_path, "r", encoding="utf-8") as f:
+            return f.read()
+    except FileNotFoundError:
+        print(f"[WARN] Stylesheet not found: {full_path}")
+        return ""
+
+
+def icon(name: str) -> QIcon:
+    """Return a QIcon from the icons/ directory."""
+    base = os.path.dirname(os.path.abspath(__file__))
+    return QIcon(os.path.join(base, "icons", name))
+
+
+# ---------------------------------------------------------------------------
+#   Main window
+# ---------------------------------------------------------------------------
+
 class ImageConverter(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.image_paths: list[str] = []
+        self.output_folder: str = ""
+
+        self._setup_window()
+        self._build_ui()
+
+    # ── Window setup ────────────────────────────────────────────────────────
+
+    def _setup_window(self):
         self.setWindowTitle("Convertir imágenes a WebP")
-        self.setGeometry(400, 200, 500, 300)
+        self.setMinimumSize(560, 360)
+        self.setGeometry(400, 200, 580, 380)
 
-        # Estilos globales del QMainWindow
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #2E2E2E;
-            }
-            QLabel {
-                color: #FFFFFF;
-            }
-            QSpinBox {
-                background-color: #3E3E3E;
-                color: #FFFFFF;
-                border: 1px solid #5E5E5E;
-                border-radius: 4px;
-                padding: 2px;
-            }
-        """)
+    # ── UI construction ──────────────────────────────────────────────────────
 
-        # Variables para almacenar paths de imágenes y carpeta de destino
-        self.image_paths = []
-        self.output_folder = ""
+    def _build_ui(self):
+        central = QWidget()
+        central.setObjectName("centralWidget")
+        self.setCentralWidget(central)
 
-        # Widget central y layout principal
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        layout = QVBoxLayout(central_widget)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(15)
+        root = QVBoxLayout(central)
+        root.setContentsMargins(30, 24, 30, 24)
+        root.setSpacing(14)
 
-        # 1) Título
-        title_label = QLabel("Convertir imágenes a WebP")
-        title_label.setAlignment(Qt.AlignCenter)
-        title_font = QFont("Arial", 14, QFont.Bold)
-        title_label.setFont(title_font)
-        layout.addWidget(title_label)
+        root.addWidget(self._make_title())
+        root.addWidget(self._make_separator())
+        root.addLayout(self._make_action_row())
+        root.addWidget(self._make_label_selected())
+        root.addWidget(self._make_label_destination())
+        root.addWidget(self._make_separator())
+        root.addLayout(self._make_quality_row())
+        root.addSpacing(6)
+        root.addWidget(self._make_convert_button(), alignment=Qt.AlignCenter)
 
-        # --------------------------------------------------
-        #   BOTONES DE HERRAMIENTAS (QToolButton) EN FILA 1
-        # --------------------------------------------------
-        row1_layout = QHBoxLayout()
-        layout.addLayout(row1_layout)
+    def _make_title(self) -> QLabel:
+        lbl = QLabel("CONVERTIR IMÁGENES A WEBP")
+        lbl.setObjectName("titleLabel")
+        lbl.setAlignment(Qt.AlignCenter)
+        return lbl
 
-        # Botón Seleccionar Imágenes
-        btn_select_images = QToolButton()
-        btn_select_images.setIcon(QIcon("icons/select_image.png"))
-        # Aquí usamos QSize, importado desde PyQt5.QtCore
-        btn_select_images.setIconSize(QSize(32, 32))
-        btn_select_images.setToolTip("Seleccionar Imágenes (PNG/JPG)")
-        btn_select_images.clicked.connect(self.select_images)
+    def _make_separator(self) -> QFrame:
+        line = QFrame()
+        line.setObjectName("separator")
+        line.setFrameShape(QFrame.HLine)
+        return line
 
-        row1_layout.addWidget(btn_select_images)
+    def _make_action_row(self) -> QHBoxLayout:
+        row = QHBoxLayout()
+        row.setSpacing(16)
 
-        # Botón Seleccionar Carpeta
-        btn_select_folder = QToolButton()
-        btn_select_folder.setIcon(QIcon("icons/folder.png"))
-        btn_select_folder.setIconSize(QSize(32, 32))  # <-- IMPORTANTE
-        btn_select_folder.setToolTip("Seleccionar Carpeta de Destino")
-        btn_select_folder.clicked.connect(self.select_folder)
-        row1_layout.addWidget(btn_select_folder)
+        self.btn_select_images = QToolButton()
+        self.btn_select_images.setIcon(icon("select_image.png"))
+        self.btn_select_images.setIconSize(QSize(32, 32))
+        self.btn_select_images.setToolTip("Seleccionar imágenes (PNG / JPG)")
+        self.btn_select_images.clicked.connect(self.select_images)
 
-        row1_layout.addWidget(btn_select_folder)
+        self.btn_select_folder = QToolButton()
+        self.btn_select_folder.setIcon(icon("folder.png"))
+        self.btn_select_folder.setIconSize(QSize(32, 32))
+        self.btn_select_folder.setToolTip("Seleccionar carpeta de destino")
+        self.btn_select_folder.clicked.connect(self.select_folder)
 
-        # --------------------------------------------------
-        #   ETIQUETA CON NOMBRES DE ARCHIVOS
-        # --------------------------------------------------
+        row.addStretch()
+        row.addWidget(self.btn_select_images)
+        row.addWidget(self.btn_select_folder)
+        row.addStretch()
+        return row
+
+    def _make_label_selected(self) -> QLabel:
         self.lbl_selected = QLabel("No hay imágenes seleccionadas")
-        self.lbl_selected.setStyleSheet("color: #AAAAAA; font-size: 12px;")
+        self.lbl_selected.setObjectName("lblSelected")
         self.lbl_selected.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.lbl_selected)
+        self.lbl_selected.setWordWrap(True)
+        return self.lbl_selected
 
-        # --------------------------------------------------
-        #   ETIQUETA CON CARPETA DE DESTINO
-        # --------------------------------------------------
+    def _make_label_destination(self) -> QLabel:
         self.lbl_destination = QLabel("Carpeta de destino no seleccionada")
-        self.lbl_destination.setStyleSheet("color: #AAAAAA; font-size: 12px;")
+        self.lbl_destination.setObjectName("lblDestination")
         self.lbl_destination.setAlignment(Qt.AlignCenter)
-        layout.addWidget(self.lbl_destination)
+        self.lbl_destination.setWordWrap(True)
+        return self.lbl_destination
 
-        # --------------------------------------------------
-        #   CALIDAD (SPINBOX)
-        # --------------------------------------------------
-        quality_layout = QHBoxLayout()
-        layout.addLayout(quality_layout)
+    def _make_quality_row(self) -> QHBoxLayout:
+        row = QHBoxLayout()
+        row.setSpacing(12)
 
-        lbl_quality = QLabel("Calidad:")
-        lbl_quality.setStyleSheet("font-size: 13px; color: #FFFFFF;")
-        quality_layout.addWidget(lbl_quality)
+        lbl = QLabel("CALIDAD:")
+        lbl.setObjectName("lblQuality")
 
         self.spin_quality = QSpinBox()
         self.spin_quality.setRange(0, 100)
-        self.spin_quality.setValue(80)  # valor por defecto
-        quality_layout.addWidget(self.spin_quality)
+        self.spin_quality.setValue(80)
 
-        # --------------------------------------------------
-        #   BOTÓN CONVERTIR (TOOLBUTTON)
-        # --------------------------------------------------
-        btn_convert = QToolButton()
-        btn_convert.setIcon(QIcon("icons/convert.png"))
-        btn_convert.setIconSize(QSize(32, 32))  # <-- IMPORTANTE
-        btn_convert.setToolTip("Convertir Imágenes a WebP")
-        btn_convert.clicked.connect(self.convert_images)
-        layout.addWidget(btn_convert, alignment=Qt.AlignCenter)
+        row.addStretch()
+        row.addWidget(lbl)
+        row.addWidget(self.spin_quality)
+        row.addStretch()
+        return row
 
-    # ---------------------------------------------------------------------
-    #   Funciones para seleccionar y convertir
-    # ---------------------------------------------------------------------
+    def _make_convert_button(self) -> QToolButton:
+        btn = QToolButton()
+        btn.setObjectName("btnConvert")
+        btn.setIcon(icon("convert.png"))
+        btn.setIconSize(QSize(24, 24))
+        btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        btn.setText("  CONVERTIR")
+        btn.setToolTip("Convertir imágenes a WebP")
+        btn.clicked.connect(self.convert_images)
+        return btn
+
+    # ── Slots / business logic ───────────────────────────────────────────────
+
     def select_images(self):
-        """
-        Abre un diálogo para seleccionar una o varias imágenes (png/jpg/jpeg).
-        """
+        """Open a dialog to pick one or more PNG/JPG images."""
         files, _ = QFileDialog.getOpenFileNames(
             self,
             "Seleccionar imágenes",
@@ -134,24 +160,18 @@ class ImageConverter(QMainWindow):
         )
         if files:
             self.image_paths = files
-            # Mostramos la lista de archivos seleccionados en la etiqueta
-            file_names = [os.path.basename(f) for f in files]
-            self.lbl_selected.setText("\n".join(file_names))
+            names = [os.path.basename(f) for f in files]
+            self.lbl_selected.setText("  |  ".join(names))
 
     def select_folder(self):
-        """
-        Abre un diálogo para seleccionar la carpeta de destino.
-        """
+        """Open a dialog to pick the output folder."""
         folder = QFileDialog.getExistingDirectory(self, "Seleccionar carpeta de destino")
         if folder:
             self.output_folder = folder
             self.lbl_destination.setText(folder)
 
     def convert_images(self):
-        """
-        Convierte las imágenes seleccionadas a formato WebP,
-        manteniendo el nombre y guardando en la carpeta elegida.
-        """
+        """Convert selected images to WebP using Pillow."""
         if not self.image_paths:
             QMessageBox.warning(self, "Advertencia", "No has seleccionado ninguna imagen.")
             return
@@ -160,37 +180,38 @@ class ImageConverter(QMainWindow):
             QMessageBox.warning(self, "Advertencia", "No has seleccionado carpeta de destino.")
             return
 
-        calidad = self.spin_quality.value()  # valor del SpinBox
-        errores = []
+        quality = self.spin_quality.value()
+        errors: list[str] = []
 
         for path in self.image_paths:
             try:
-                # Nombre base y sin extensión
-                base_name = os.path.basename(path)
-                name_no_ext = os.path.splitext(base_name)[0]
-
-                # Ruta de salida
+                name_no_ext = os.path.splitext(os.path.basename(path))[0]
                 out_path = os.path.join(self.output_folder, f"{name_no_ext}.webp")
+                Image.open(path).convert("RGB").save(out_path, "webp", quality=quality)
+            except Exception as exc:
+                errors.append(f"{os.path.basename(path)}: {exc}")
 
-                # Convertir a WebP con Pillow
-                im = Image.open(path).convert("RGB")
-                im.save(out_path, "webp", quality=calidad)
-            except Exception as e:
-                errores.append(f"Error al convertir {path}: {str(e)}")
-
-        # Mensaje de resultado
-        if errores:
-            msg = "\n".join(errores)
-            QMessageBox.warning(self, "Errores en la conversión", msg)
+        if errors:
+            QMessageBox.warning(self, "Errores en la conversión", "\n".join(errors))
         else:
-            QMessageBox.information(self, "Completado", "Todas las imágenes se convirtieron correctamente.")
+            count = len(self.image_paths)
+            QMessageBox.information(
+                self, "Completado",
+                f"{count} imagen{'es' if count != 1 else ''} convertida{'s' if count != 1 else ''} correctamente."
+            )
 
+
+# ---------------------------------------------------------------------------
+#   Entry point
+# ---------------------------------------------------------------------------
 
 def main():
     app = QApplication(sys.argv)
+    app.setStyleSheet(load_stylesheet("styles/cyberpunk.qss"))
     window = ImageConverter()
     window.show()
     sys.exit(app.exec_())
+
 
 if __name__ == "__main__":
     main()
