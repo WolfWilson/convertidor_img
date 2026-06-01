@@ -1,5 +1,6 @@
 import sys
 import os
+import qtawesome as qta
 from PyQt5.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QToolButton, QFileDialog, QSpinBox, QMessageBox, QFrame
@@ -89,13 +90,17 @@ class ImageConverter(QMainWindow):
         row.setSpacing(16)
 
         self.btn_select_images = QToolButton()
-        self.btn_select_images.setIcon(icon("select_image.png"))
+        self.btn_select_images.setIcon(
+            qta.icon("fa5s.file-image", color="#00f5ff")
+        )
         self.btn_select_images.setIconSize(QSize(32, 32))
         self.btn_select_images.setToolTip("Seleccionar imágenes (PNG / JPG)")
         self.btn_select_images.clicked.connect(self.select_images)
 
         self.btn_select_folder = QToolButton()
-        self.btn_select_folder.setIcon(icon("folder.png"))
+        self.btn_select_folder.setIcon(
+            qta.icon("fa5s.folder-open", color="#00f5ff")
+        )
         self.btn_select_folder.setIconSize(QSize(32, 32))
         self.btn_select_folder.setToolTip("Seleccionar carpeta de destino")
         self.btn_select_folder.clicked.connect(self.select_folder)
