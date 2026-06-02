@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import (
     QLabel, QToolButton, QFileDialog, QSpinBox, QMessageBox, QFrame,
     QCheckBox
 )
-from PyQt5.QtGui import QIcon, QFont
+from PyQt5.QtGui import QIcon, QFont, QPixmap
 from PyQt5.QtCore import Qt, QSize
 from PIL import Image
 
@@ -42,6 +42,7 @@ class ImageConverter(QMainWindow):
         super().__init__()
         self.image_paths: list[str] = []
         self.output_folder: str = ""
+        self._preview_pixmap: QPixmap | None = None
 
         self._setup_window()
         self._build_ui()
@@ -50,8 +51,8 @@ class ImageConverter(QMainWindow):
 
     def _setup_window(self):
         self.setWindowTitle("Convertir imágenes a WebP")
-        self.setMinimumSize(560, 420)
-        self.setGeometry(400, 200, 600, 460)
+        self.setMinimumSize(760, 480)
+        self.setGeometry(300, 150, 920, 540)
 
     # ── UI construction ──────────────────────────────────────────────────────
 
@@ -66,12 +67,25 @@ class ImageConverter(QMainWindow):
 
         root.addWidget(self._make_title())
         root.addWidget(self._make_separator())
-        root.addLayout(self._make_action_row())
-        root.addWidget(self._make_label_selected())
-        root.addWidget(self._make_label_destination())
-        root.addWidget(self._make_separator())
-        root.addLayout(self._make_quality_row())
-        root.addLayout(self._make_resize_row())
+
+        # ── Content row: controls (left) + preview (right) ──────────────────
+        content = QHBoxLayout()
+        content.setSpacing(20)
+
+        controls = QVBoxLayout()
+        controls.setSpacing(14)
+        controls.addLayout(self._make_action_row())
+        controls.addWidget(self._make_label_selected())
+        controls.addWidget(self._make_label_destination())
+        controls.addWidget(self._make_separator())
+        controls.addLayout(self._make_quality_row())
+        controls.addLayout(self._make_resize_row())
+        controls.addStretch()
+
+        content.addLayout(controls, stretch=3)
+        content.addWidget(self._make_preview_panel(), stretch=2)
+
+        root.addLayout(content)
         root.addSpacing(6)
         root.addWidget(self._make_convert_button(), alignment=Qt.AlignCenter)
 
@@ -196,6 +210,57 @@ class ImageConverter(QMainWindow):
         btn.clicked.connect(self.convert_images)
         return btn
 
+    def _make_preview_panel(self) -> QFrame:
+        frame = QFrame()
+        frame.setObjectName("previewFrame")
+        layout = QVBoxLayout(frame)
+        layout.setContentsMargins(8, 8, 8, 8)
+
+        self.lbl_preview = QLabel("SIN VISTA\nPREVIA")
+        self.lbl_preview.setObjectName("previewLabel")
+        self.lbl_preview.setAlignment(Qt.AlignCenter)
+        self.lbl_preview.setWordWrap(True)
+        layout.addWidget(self.lbl_preview)
+        return frame
+
+    def _update_preview(self):
+        if len(self.image_paths) == 1:
+            px = QPixmap(self.image_paths[0])
+            if not px.isNull():
+                self._preview_pixmap = px
+                self._refresh_preview_scaled()
+            else:
+                self._preview_pixmap = None
+                self.lbl_preview.clear()
+                self.lbl_preview.setText("⚠ ERROR\nAL CARGAR")
+        elif len(self.image_paths) > 1:
+            self._preview_pixmap = None
+            self.lbl_preview.clear()
+            self.lbl_preview.setText(
+                f"◈ BATCH MODE ◈\n\n{len(self.image_paths)} imágenes\nseleccionadas"
+            )
+        else:
+            self._preview_pixmap = None
+            self.lbl_preview.clear()
+            self.lbl_preview.setText("SIN VISTA\nPREVIA")
+
+    def _refresh_preview_scaled(self):
+        if self._preview_pixmap is None:
+            return
+        size = self.lbl_preview.size()
+        if size.width() < 10 or size.height() < 10:
+            return
+        scaled = self._preview_pixmap.scaled(
+            size,
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation,
+        )
+        self.lbl_preview.setPixmap(scaled)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._refresh_preview_scaled()
+
     def _on_resize_toggled(self, checked: bool):
         """Enable or disable dimension inputs based on checkbox state."""
         self.spin_width.setEnabled(checked)
@@ -221,6 +286,8 @@ class ImageConverter(QMainWindow):
                 source_dir = os.path.dirname(files[0])
                 self.output_folder = source_dir
                 self.lbl_destination.setText(source_dir)
+
+            self._update_preview()
 
     def select_folder(self):
         """Open a dialog to pick the output folder."""

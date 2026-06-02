@@ -198,6 +198,25 @@ QCheckBox::indicator:checked {
     border: 2px solid #00f5ff;
 }
 
+/* ── Preview panel ───────────────────────────────────── */
+QFrame#previewFrame {
+    background-color: #0a0a1e;
+    border: 2px solid #00f5ff;
+    border-radius: 8px;
+    min-width: 180px;
+    min-height: 200px;
+}
+
+QLabel#previewLabel {
+    color: #1e3a5a;
+    font-family: "Consolas", monospace;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    background-color: transparent;
+    border: none;
+}
+
 QCheckBox::indicator:checked:hover {
     background-color: #ff00cc;
     border: 2px solid #ff00cc;
