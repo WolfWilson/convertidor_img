@@ -96,7 +96,7 @@ class ImageConverter(QMainWindow):
             qta.icon("fa5s.file-image", color="#00f5ff")
         )
         self.btn_select_images.setIconSize(QSize(32, 32))
-        self.btn_select_images.setToolTip("Seleccionar imágenes (PNG / JPG)")
+        self.btn_select_images.setToolTip("Seleccionar imágenes (PNG / JPG / WebP)")
         self.btn_select_images.clicked.connect(self.select_images)
 
         self.btn_select_folder = QToolButton()
@@ -209,7 +209,7 @@ class ImageConverter(QMainWindow):
             self,
             "Seleccionar imágenes",
             "",
-            "Imágenes (*.png *.jpg *.jpeg);;Todos los archivos (*)"
+            "Imágenes (*.png *.jpg *.jpeg *.webp);;Todos los archivos (*)"
         )
         if files:
             self.image_paths = files
@@ -249,7 +249,9 @@ class ImageConverter(QMainWindow):
             try:
                 name_no_ext = os.path.splitext(os.path.basename(path))[0]
                 out_path = os.path.join(self.output_folder, f"{name_no_ext}.webp")
-                img = Image.open(path).convert("RGB")
+                img = Image.open(path)
+                if img.mode not in ("RGB", "RGBA"):
+                    img = img.convert("RGBA" if img.mode == "P" and "transparency" in img.info else "RGB")
                 if do_resize:
                     img = img.resize((target_w, target_h), Image.LANCZOS)
                 img.save(out_path, "webp", quality=quality)
