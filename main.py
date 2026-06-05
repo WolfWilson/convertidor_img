@@ -17,8 +17,7 @@ from PIL import Image
 
 def load_stylesheet(path: str) -> str:
     """Load a QSS file relative to this script's directory."""
-    base = os.path.dirname(os.path.abspath(__file__))
-    full_path = os.path.join(base, path)
+    full_path = resource_path(path)
     try:
         with open(full_path, "r", encoding="utf-8") as f:
             return f.read()
@@ -29,8 +28,37 @@ def load_stylesheet(path: str) -> str:
 
 def icon(name: str) -> QIcon:
     """Return a QIcon from the icons/ directory."""
-    base = os.path.dirname(os.path.abspath(__file__))
-    return QIcon(os.path.join(base, "icons", name))
+    return QIcon(resource_path(os.path.join("icons", name)))
+
+
+def resource_path(relative_path: str) -> str:
+    """Return absolute path to a bundled resource.
+
+    Search order (first existing path wins):
+      1. sys._MEIPASS  — PyInstaller onefile temp dir OR onedir _internal/
+      2. _internal/    — PyInstaller 6.x onedir places data there
+      3. exe directory — PyInstaller 5.x onedir and loose copies
+      4. script directory — normal dev execution
+    """
+    candidates: list[str] = []
+
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        candidates.append(os.path.join(meipass, relative_path))
+
+    if getattr(sys, "frozen", False):
+        exe_dir = os.path.dirname(sys.executable)
+        candidates.append(os.path.join(exe_dir, "_internal", relative_path))
+        candidates.append(os.path.join(exe_dir, relative_path))
+
+    candidates.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), relative_path))
+
+    for path in candidates:
+        if os.path.exists(path):
+            return path
+
+    # Nothing found — return last candidate so callers produce a clear error
+    return candidates[-1]
 
 
 # ---------------------------------------------------------------------------
@@ -202,8 +230,8 @@ class ImageConverter(QMainWindow):
     def _make_convert_button(self) -> QToolButton:
         btn = QToolButton()
         btn.setObjectName("btnConvert")
-        btn.setIcon(icon("convert.png"))
-        btn.setIconSize(QSize(24, 24))
+        btn.setIcon(qta.icon("fa5s.sync-alt", color="#ff00cc"))
+        btn.setIconSize(QSize(20, 20))
         btn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         btn.setText("  CONVERTIR")
         btn.setToolTip("Convertir imágenes a WebP")
